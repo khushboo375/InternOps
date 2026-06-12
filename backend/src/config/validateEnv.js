@@ -11,6 +11,11 @@ const OPTIONAL_VARS = [
 ];
 
 function validateEnv() {
+  // Skip validation in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
   const missingRequired = [];
   const missingOptional = [];
 
