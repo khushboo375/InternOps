@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import api from '../lib/axios'
-import { Card, Btn, Textarea, Select } from './ui'
-import RatingSuggestionCard from './RatingSuggestionCard'
+import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import api from '../lib/axios';
+import { Card, Btn, Textarea, Select } from './ui';
+import RatingSuggestionCard from './RatingSuggestionCard';
 
 export default function RatingForm() {
   const queryClient = useQueryClient();
@@ -17,33 +17,20 @@ export default function RatingForm() {
     queryFn: () => api.get('/team/members').then((res) => res.data),
   });
 
-  const {
-    data: suggestion,
-    isLoading: suggestionLoading
-  } = useQuery({
+  const { data: suggestion, isLoading: suggestionLoading } = useQuery({
     queryKey: ['ratingSuggestion', userId],
 
     queryFn: () =>
-      api
-        .get(`/ratings/suggestions/${userId}`)
-        .then(res => res.data),
+      api.get(`/ratings/suggestions/${userId}`).then((res) => res.data),
 
     enabled: !!userId,
-  })
+  });
 
   useEffect(() => {
-
-    if (
-      suggestion?.recommendation?.suggestedScore
-    ) {
-      setScore(
-        Math.round(
-          suggestion.recommendation.suggestedScore
-        )
-      )
+    if (suggestion?.recommendation?.suggestedScore) {
+      setScore(Math.round(suggestion.recommendation.suggestedScore));
     }
-
-  }, [suggestion])
+  }, [suggestion]);
 
   const rateMutation = useMutation({
     mutationFn: (data) => api.post('/ratings', data),
@@ -70,8 +57,18 @@ export default function RatingForm() {
         suggestion={suggestion}
         loading={suggestionLoading}
       />
-      <form onSubmit={(e) => { e.preventDefault(); rateMutation.mutate({ rated_user_id: userId, score, remarks }) }} className="space-y-3">
-        <Select value={userId} onChange={e => setUserId(e.target.value)} required>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          rateMutation.mutate({ rated_user_id: userId, score, remarks });
+        }}
+        className="space-y-3"
+      >
+        <Select
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          required
+        >
           <option value="">Select member…</option>
           {reports?.map((u) => (
             <option key={u.id} value={u.id}>

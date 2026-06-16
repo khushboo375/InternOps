@@ -11,7 +11,7 @@ const { z } = require('zod');
 const suggestionRoutes = require('./suggestion.routes');
 
 module.exports = async function ratingsRoutes(fastify) {
-  await fastify.register( suggestionRoutes );
+  await fastify.register(suggestionRoutes);
   // Submit a rating for someone in your team (immutable history row).
   fastify.post(
     '/',
