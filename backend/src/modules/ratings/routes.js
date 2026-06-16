@@ -8,8 +8,10 @@ const { createAuditLog, extractRequestInfo } = require('../../utils/audit');
 const { checkHierarchyAccess } = require('../../utils/hierarchy');
 const { send: sendNotification } = require('../notifications/repository');
 const { z } = require('zod');
+const suggestionRoutes = require('./suggestion.routes');
 
 module.exports = async function ratingsRoutes(fastify) {
+  await fastify.register( suggestionRoutes );
   // Submit a rating for someone in your team (immutable history row).
   fastify.post('/', { schema: { tags: ['Ratings'], description: 'Submit a rating' }, preHandler: [auth, rbac('ADMIN', 'SENIOR_TL', 'TL', 'CAPTAIN')] }, async (req, reply) => {
     const { rated_user_id, score, remarks } = z.object({
