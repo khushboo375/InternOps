@@ -2,7 +2,6 @@ const repo = require('./suggestion.repository');
 const fallback = require('./fallback.service');
 const aiService = require('./ai.service');
 
-
 function calculateAttendancePercentage(attendance) {
   const totalDays = Number(attendance.total_days || 0);
   const presentDays = Number(attendance.present_days || 0);
@@ -13,10 +12,7 @@ function calculateAttendancePercentage(attendance) {
   }
 
   return Number(
-    (
-      ((presentDays + (halfDays * 0.5)) / totalDays)
-      * 100
-    ).toFixed(2)
+    (((presentDays + halfDays * 0.5) / totalDays) * 100).toFixed(2)
   );
 }
 
@@ -28,10 +24,7 @@ function calculateVerificationRate(tasks) {
     return 0;
   }
 
-  return Number(
-    ((verified / submitted) * 100)
-      .toFixed(2)
-  );
+  return Number(((verified / submitted) * 100).toFixed(2));
 }
 
 function calculateAverageRating(ratings) {
@@ -39,29 +32,19 @@ function calculateAverageRating(ratings) {
     return 0;
   }
 
-  const total = ratings.reduce(
-    (sum, rating) =>
-      sum + Number(rating.score),
-    0
-  );
+  const total = ratings.reduce((sum, rating) => sum + Number(rating.score), 0);
 
-  return Number(
-    (total / ratings.length)
-      .toFixed(2)
-  );
+  return Number((total / ratings.length).toFixed(2));
 }
 
 function calculateRatingTrend(ratings) {
-
   if (ratings.length < 2) {
     return 'INSUFFICIENT_DATA';
   }
 
-  const newest =
-    Number(ratings[0].score);
+  const newest = Number(ratings[0].score);
 
-  const oldest =
-    Number(ratings[ratings.length - 1].score);
+  const oldest = Number(ratings[ratings.length - 1].score);
 
   if (newest > oldest) {
     return 'IMPROVING';
@@ -75,160 +58,97 @@ function calculateRatingTrend(ratings) {
 }
 
 function isNewUser(createdAt) {
+  const joinedDate = new Date(createdAt);
 
-  const joinedDate =
-    new Date(createdAt);
+  const today = new Date();
 
-  const today =
-    new Date();
-
-  const diffDays =
-    Math.floor(
-      (
-        today - joinedDate
-      ) /
-      (
-        1000 *
-        60 *
-        60 *
-        24
-      )
-    );
+  const diffDays = Math.floor((today - joinedDate) / (1000 * 60 * 60 * 24));
 
   return diffDays <= 7;
 }
 
 async function getSuggestionData(userId) {
-
-  const user =
-    await repo.getUser(userId);
+  const user = await repo.getUser(userId);
 
   if (!user) {
-    throw new Error(
-      'User not found'
-    );
+    throw new Error('User not found');
   }
 
-  const allowedRoles = [
-    'TL',
-    'CAPTAIN',
-    'INTERN'
-  ];
+  const allowedRoles = ['TL', 'CAPTAIN', 'INTERN'];
 
   if (!allowedRoles.includes(user.role)) {
-    throw new Error(
-      'Unsupported role for rating suggestion'
-    );
+    throw new Error('Unsupported role for rating suggestion');
   }
 
-  const userIsNew =
-    isNewUser(
-      user.created_at
-    );
+  const userIsNew = isNewUser(user.created_at);
   if (userIsNew) {
     return {
       user: {
-      id: user.id,
-      full_name: user.full_name,
-      role: user.role
-    },
+        id: user.id,
+        full_name: user.full_name,
+        role: user.role,
+      },
 
-    isNewUser: true,
+      isNewUser: true,
 
-    recommendation: {
-      suggestedScore: null,
-      reasoning: 'New user joined recently'
-    }
+      recommendation: {
+        suggestedScore: null,
+        reasoning: 'New user joined recently',
+      },
     };
   }
 
-  const attendance =
-    await repo.getAttendanceSummary(
-      userId
-    );
+  const attendance = await repo.getAttendanceSummary(userId);
 
-  const tasks =
-    await repo.getTaskSummary(
-      userId
-    );
+  const tasks = await repo.getTaskSummary(userId);
 
-  const ratings =
-    await repo.getRatingHistory(
-      userId
-    );
+  const ratings = await repo.getRatingHistory(userId);
 
   const metrics = {
+    attendancePercentage: calculateAttendancePercentage(attendance),
 
-    attendancePercentage:
-      calculateAttendancePercentage(
-        attendance
-      ),
+    verificationRate: calculateVerificationRate(tasks),
 
-    verificationRate:
-      calculateVerificationRate(
-        tasks
-      ),
+    averageRating: calculateAverageRating(ratings),
 
-    averageRating:
-      calculateAverageRating(
-        ratings
-      ),
-
-    ratingTrend:
-      calculateRatingTrend(
-        ratings
-      )
+    ratingTrend: calculateRatingTrend(ratings),
   };
 
-  
   let recommendation;
 
   try {
-
-    const aiResponse =
-      await aiService.generateRatingSuggestion({
-        user,
-        metrics,
-        attendance,
-        tasks,
-        ratings
-      });
+    const aiResponse = await aiService.generateRatingSuggestion({
+      user,
+      metrics,
+      attendance,
+      tasks,
+      ratings,
+    });
 
     recommendation = {
       source: 'ai',
-      suggestedScore:
-        aiResponse.score,
-      reasoning:
-        aiResponse.reason
+      suggestedScore: aiResponse.score,
+      reasoning: aiResponse.reason,
     };
-
   } catch (error) {
+    console.error('AI rating generation failed:', error.message);
 
-    console.error(
-      'AI rating generation failed:',
-      error.message
-    );
-
-    recommendation =
-      fallback.calculateFallbackRating(
-        metrics
-      );
+    recommendation = fallback.calculateFallbackRating(metrics);
   }
 
   return {
     user: {
       id: user.id,
       full_name: user.full_name,
-      role: user.role
+      role: user.role,
     },
 
-    isNewUser:
-      isNewUser(user.created_at),
+    isNewUser: isNewUser(user.created_at),
 
-    recommendation
+    recommendation,
   };
 }
 
 module.exports = {
-  getSuggestionData
+  getSuggestionData,
 };

@@ -1,20 +1,14 @@
-const { GoogleGenerativeAI } =
-  require('@google/generative-ai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const genAI =
-  new GoogleGenerativeAI(
-    process.env.GEMINI_API_KEY
-  );
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function generateRatingSuggestion(data) {
-
-  const model =
-    genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      generationConfig: {
-        temperature: 0
-      }
-    });
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    generationConfig: {
+      temperature: 0,
+    },
+  });
 
   const prompt = `
     You are a workforce performance evaluator for InternOps.
@@ -53,30 +47,24 @@ async function generateRatingSuggestion(data) {
     - focus on attendance, task completion and rating history.
   `;
 
-  const result =
-    await model.generateContent(prompt);
+  const result = await model.generateContent(prompt);
 
-  const text =
-    result.response
-      .text()
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim();
+  const text = result.response
+    .text()
+    .replace(/```json/g, '')
+    .replace(/```/g, '')
+    .trim();
 
   return JSON.parse(text);
   const parsed = JSON.parse(text);
 
-  if (
-    typeof parsed.score !== 'number'
-  ) {
-    throw new Error(
-      'Invalid AI response'
-    );
+  if (typeof parsed.score !== 'number') {
+    throw new Error('Invalid AI response');
   }
 
   return parsed;
 }
 
 module.exports = {
-  generateRatingSuggestion
+  generateRatingSuggestion,
 };

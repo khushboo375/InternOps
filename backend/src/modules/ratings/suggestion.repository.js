@@ -75,5 +75,5 @@ module.exports = {
   getUser,
   getAttendanceSummary,
   getTaskSummary,
-  getRatingHistory
+  getRatingHistory,
 };
