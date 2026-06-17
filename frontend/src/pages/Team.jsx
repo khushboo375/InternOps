@@ -116,12 +116,21 @@ function AddMemberModal({ onClose }) {
   const { user } = useAuthStore();
   const allowedRoles = rolesBelow(user?.role);
   const [form, setForm] = useState({
-    email: '', password: '', full_name: '', role: allowedRoles[0] || 'INTERN',
-    department_id: '', phone: '', college: '', course: '', year_of_study: '',
-    position: '', joining_date: '', location: '',
-  })
-  const [showPass, setShowPass] = useState(false)
-  const [error, setError] = useState('')
+    email: '',
+    password: '',
+    full_name: '',
+    role: allowedRoles[0] || 'INTERN',
+    department_id: '',
+    phone: '',
+    college: '',
+    course: '',
+    year_of_study: '',
+    position: '',
+    joining_date: '',
+    location: '',
+  });
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState('');
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
@@ -212,11 +221,13 @@ function AddMemberModal({ onClose }) {
                   minLength={8}
                   className="border p-2 w-full rounded-lg pr-10"
                   value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPass(s => !s)}
+                  onClick={() => setShowPass((s) => !s)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
                 >
                   {showPass ? '🙈' : '👁️'}
