@@ -13,11 +13,7 @@ async function forgotPassword(email, requestInfo) {
 
   const token = await repo.createResetToken(user.id);
 
-  await emailService.sendEmail({
-    to: email,
-    subject: 'InternOps - Password Reset',
-    body: `Your password reset token: ${token} (valid for 15 minutes)`,
-  });
+  await emailService.sendPasswordReset(email, token);
 
   await createAuditLog({
     userId: user.id,
