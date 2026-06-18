@@ -6,7 +6,6 @@ const config = require('./config');
 const pool = require('./config/db');
 const metrics = require('./utils/metrics');
 const { initializeWebSocket } = require('./websocket');
-const { redisInstance } = require('./config/redis');
 
 const app = Fastify({
   trustProxy: true,
@@ -52,18 +51,17 @@ app.register(async function sanitizationPlugin(instance) {
   });
 });
 
-//  Register once globally — route-level config handles auth stricter limit
+//  Register once globally — no Redis dependency
 app.register(require('@fastify/rate-limit'), {
   global: true,
   max: config.rateLimit.globalMax,
   timeWindow: config.rateLimit.timeWindow,
-  ...(redisInstance ? { redis: redisInstance } : {}), //  only pass Redis if available
 });
 
 app.register(require('@fastify/cookie'));
 
-const { csrfProtection } = require('./middleware/csrf');
-app.addHook('onRequest', csrfProtection);
+const { csrfMiddleware } = require('./middleware/csrf');
+app.addHook('onRequest', csrfMiddleware);
 
 app.register(require('@fastify/multipart'), {
   limits: {
