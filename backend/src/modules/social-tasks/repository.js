@@ -51,10 +51,7 @@ async function verifyProof(proofId, verifierId) {
 
   const { isDirectManager } = require('../../utils/hierarchy');
 
-  const allowed = await isDirectManager(
-    verifierId,
-    proofRes.rows[0].intern_id
-  );
+  const allowed = await isDirectManager(verifierId, proofRes.rows[0].intern_id);
 
   if (!allowed) {
     throw new Error('Forbidden: not your direct report');
