@@ -1,11 +1,24 @@
 const auth = require('../../middleware/auth');
+const rbac = require('../../middleware/rbac');
 const {
   generateAIResponse,
   getProviderHealth,
 } = require('../../services/aiProviderService');
 
 async function routes(fastify) {
-  fastify.post('/chat', { preHandler: [auth] }, async (req, reply) => {
+  fastify.post(
+  '/chat',
+  {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: '1 minute',
+        keyGenerator: (req) => req.ip,
+      },
+    },
+    preHandler: [auth, rbac('ADMIN', 'SENIOR_TL', 'TL', 'CAPTAIN')],
+  },
+  async (req, reply) => {
     const { messages, prompt } = req.body || {};
 
     const finalMessages =
@@ -37,7 +50,12 @@ async function routes(fastify) {
     }
   });
 
-  fastify.get('/health', { preHandler: [auth] }, async () => {
+ fastify.get(
+  '/health',
+  {
+    preHandler: [auth, rbac('ADMIN')],
+  },
+  async () => {
     return {
       providers: getProviderHealth(),
     };
