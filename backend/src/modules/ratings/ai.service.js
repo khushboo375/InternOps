@@ -15,7 +15,7 @@ async function generateRatingSuggestion(data) {
 
     You evaluate interns, captains, and team leads based on attendance, task completion, and historical ratings.
 
-    Evaluate the intern and suggest a rating from 1 to 5.
+    Evaluate the intern and suggest a rating from 1 to 10.
 
     Intern Details:
     ${JSON.stringify(data, null, 2)}
@@ -41,6 +41,7 @@ async function generateRatingSuggestion(data) {
     Do not randomly change ratings.
 
     Requirements:
+    - score number must be between 1 and 10.
     - reason must be between 10 and 15 words.
     - reason must be a single sentence.
     - do not exceed 15 words.
@@ -55,7 +56,7 @@ async function generateRatingSuggestion(data) {
     .replace(/```/g, '')
     .trim();
 
-  return JSON.parse(text);
+  // JSON.parse(text);
   const parsed = JSON.parse(text);
 
   if (typeof parsed.score !== 'number') {
