@@ -6,7 +6,6 @@ const config = require('./config');
 const pool = require('./config/db');
 const metrics = require('./utils/metrics');
 const { initializeWebSocket } = require('./websocket');
-const { redisInstance } = require('./config/redis');
 
 const app = Fastify({
   trustProxy: true,
@@ -52,25 +51,17 @@ app.register(async function sanitizationPlugin(instance) {
   });
 });
 
+//  Register once globally — no Redis dependency
 app.register(require('@fastify/rate-limit'), {
+  global: true,
   max: config.rateLimit.globalMax,
   timeWindow: config.rateLimit.timeWindow,
-  redis: redisInstance, // Centralized storage
-});
-
-// 2. Auth-specific rate limit - use Redis for shared state
-app.register(require('@fastify/rate-limit'), {
-  max: config.rateLimit.authMax,
-  timeWindow: config.rateLimit.timeWindow,
-  keyGenerator: (request) => request.ip + '_auth',
-  prefix: '/api/auth',
-  redis: redisInstance, // Centralized storage
 });
 
 app.register(require('@fastify/cookie'));
 
-const { csrfProtection } = require('./middleware/csrf');
-app.register(csrfProtection);
+const { csrfMiddleware } = require('./middleware/csrf');
+app.addHook('onRequest', csrfMiddleware);
 
 app.register(require('@fastify/multipart'), {
   limits: {
@@ -78,23 +69,20 @@ app.register(require('@fastify/multipart'), {
   },
 });
 
-app.register(require('@fastify/static'), {
-  root: path.join(__dirname, '..', config.uploadDir),
-  prefix: '/uploads/',
-});
-
-app.register(require('@fastify/swagger'), {
-  openapi: {
-    info: {
-      title: 'InternOps API',
-      version: '1.0.0',
+if (process.env.NODE_ENV !== 'test') {
+  app.register(require('@fastify/swagger'), {
+    openapi: {
+      info: {
+        title: 'InternOps API',
+        version: '1.0.0',
+      },
     },
-  },
-});
+  });
 
-app.register(require('@fastify/swagger-ui'), {
-  routePrefix: '/docs',
-});
+  app.register(require('@fastify/swagger-ui'), {
+    routePrefix: '/docs',
+  });
+}
 
 app.register(require('./modules/auth/routes'), {
   prefix: '/api/auth',
@@ -162,6 +150,10 @@ app.register(require('./modules/reports/routes'), {
 
 app.register(require('./modules/reports/export'), {
   prefix: '/api/reports/export',
+});
+
+app.register(require('./modules/ai/routes'), {
+  prefix: '/api/ai',
 });
 
 app.register(require('./modules/uptoskills/routes'), {

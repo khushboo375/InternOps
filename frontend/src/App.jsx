@@ -1,35 +1,20 @@
 ﻿import { Routes, Route, Navigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
+import { useEffect } from 'react';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import InternOpsAssistant from './components/InternOpsAssistant';
 import useAuthStore from './store/auth';
-
-function isTokenExpired(token) {
-  try {
-    const decoded = jwtDecode(token);
-
-    if (!decoded.exp) {
-      return true;
-    }
-
-    return Date.now() >= decoded.exp * 1000;
-  } catch {
-    return true;
-  }
-}
+import api from './lib/axios';
 
 function Private({ children }) {
   const token = useAuthStore((s) => s.accessToken);
-  const logout = useAuthStore((s) => s.logout);
+  const hydrated = useAuthStore((s) => s.hydrated);
 
-  if (!token || isTokenExpired(token)) {
-    if (token && typeof logout === 'function') {
-      logout();
-    }
+  if (!hydrated) return null;
 
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 
@@ -37,6 +22,19 @@ function Private({ children }) {
 }
 
 export default function App() {
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const setHydrated = useAuthStore((s) => s.setHydrated);
+
+  useEffect(() => {
+    api
+      .post('/auth/refresh')
+      .then((res) =>
+        setAuth({ accessToken: res.data.accessToken, user: res.data.user })
+      )
+      .catch(() => {})
+      .finally(() => setHydrated());
+  }, []);
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

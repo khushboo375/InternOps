@@ -63,7 +63,6 @@ async function routes(fastify) {
       });
       return {
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
         user: result.user,
       };
     }
@@ -88,7 +87,6 @@ async function routes(fastify) {
       });
       return {
         accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
       };
     }
   );
@@ -124,7 +122,19 @@ async function routes(fastify) {
 
   // Get CSRF token
   fastify.get('/csrf-token', async (req, reply) => {
-    return { csrfToken: generateToken() };
+    const { generateToken } = require('../../middleware/csrf');
+    const csrfToken = generateToken(req, reply);
+    // Also expose the token in a non-HttpOnly cookie so the SPA can
+    // echo it in the X-CSRF-Token header on mutation requests. The
+    // actual validation is bound to the signed session cookie, not this
+    // readable one.
+    reply.setCookie('csrf-token', csrfToken, {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: 'strict',
+      path: '/',
+    });
+    return { csrfToken };
   });
 
   // Verify email
