@@ -92,7 +92,6 @@ async function generateRatingSuggestion(data) {
   Focus on attendance, task completion and rating history.
   `.trim();
 
-
   const result = await model.generateContent(prompt);
   const raw = result.response.text();
   const text = raw
