@@ -74,11 +74,7 @@ async function routes(fastify) {
       //   });
       // }
 
-      if (
-        finalMessages.some(
-          (msg) => !msg.content || !msg.content.trim()
-        )
-      ) {
+      if (finalMessages.some((msg) => !msg.content || !msg.content.trim())) {
         return reply.status(400).send({
           error: 'Message content cannot be empty',
         });
