@@ -57,35 +57,35 @@ async function routes(fastify) {
         req.headers['user-agent']
       );
       reply.setCookie('refreshToken', result.refreshToken, {
-  httpOnly: true,
-  secure: isProduction,
-  sameSite: 'strict',
-  path: '/api/auth/refresh',
-});
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+      });
 
-const response = {
-  accessToken: result.accessToken,
-  user: result.user,
-};
+      const response = {
+        accessToken: result.accessToken,
+        user: result.user,
+      };
 
-reply.send(response);
+      reply.send(response);
 
-req.log.info(
-  {
-    action: 'LOGIN',
-    userId: result.user.id,
-    ip: req.ip,
-    userAgent: req.headers['user-agent'],
-  },
-  'login success'
-);
+      req.log.info(
+        {
+          action: 'LOGIN',
+          userId: result.user.id,
+          ip: req.ip,
+          userAgent: req.headers['user-agent'],
+        },
+        'login success'
+      );
 
-createAuditLog({
-  userId: result.user.id,
-  action: 'LOGIN',
-  ipAddress: req.ip,
-  userAgent: req.headers['user-agent'],
-}).catch((err) => req.log.error(err, 'audit log failed'));
+      createAuditLog({
+        userId: result.user.id,
+        action: 'LOGIN',
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      }).catch((err) => req.log.error(err, 'audit log failed'));
     }
   );
 
