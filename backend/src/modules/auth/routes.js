@@ -159,7 +159,7 @@ async function routes(fastify) {
   // Forgot password
   fastify.post('/forgot-password', async (req, reply) => {
     const { email } = z.object({ email: z.string().email() }).parse(req.body);
-    await forgotPassword(email, extractRequestInfo(req));
+    req.auditOnResponse = await forgotPassword(email, extractRequestInfo(req));
     return { message: 'If that email exists, a reset link has been sent.' };
   });
 
@@ -168,7 +168,11 @@ async function routes(fastify) {
     const { token, newPassword } = z
       .object({ token: z.string(), newPassword: z.string().min(8) })
       .parse(req.body);
-    await resetPassword(token, newPassword, extractRequestInfo(req));
+    req.auditOnResponse = await resetPassword(
+      token,
+      newPassword,
+      extractRequestInfo(req)
+    );
     return {
       message:
         'Password reset successful. Please log in with your new password.',

@@ -3,7 +3,7 @@ const rbac = require('../../middleware/rbac');
 const ownership = require('../../middleware/ownership');
 const requireFreshRole = require('../../middleware/requireFreshRole');
 const repo = require('./repository');
-const { createAuditLog, extractRequestInfo } = require('../../utils/audit');
+const {  extractRequestInfo } = require('../../utils/audit');
 const { checkHierarchyAccess, ROLE_RANK } = require('../../utils/hierarchy');
 const { z } = require('zod');
 
@@ -131,14 +131,14 @@ async function routes(fastify) {
         ...data,
         manager_id: managerId,
       });
-      await createAuditLog({
+      req.auditOnResponse = {
         userId: req.user.id,
         action: 'MEMBER_CREATED',
         resourceType: 'user',
         resourceId: member.id,
         newValue: { email: member.email, role: member.role },
         ...extractRequestInfo(req),
-      });
+      };
       return reply.status(201).send(member);
     }
   );
@@ -171,7 +171,7 @@ async function routes(fastify) {
       const before = await repo.getMemberById(req.params.id);
       if (!before) return reply.status(404).send({ error: 'Member not found' });
       const after = await repo.updateMember(req.params.id, data);
-      await createAuditLog({
+      req.auditOnResponse = {
         userId: req.user.id,
         action: 'MEMBER_DETAILS_UPDATED',
         resourceType: 'user',
@@ -179,7 +179,7 @@ async function routes(fastify) {
         oldValue: before,
         newValue: after,
         ...extractRequestInfo(req),
-      });
+      };
       return after;
     }
   );
@@ -201,13 +201,13 @@ async function routes(fastify) {
         .parse(req.body);
       const member = await repo.setMemberStatus(req.params.id, suspended);
       if (!member) return reply.status(404).send({ error: 'Member not found' });
-      await createAuditLog({
+      req.auditOnResponse = {
         userId: req.user.id,
         action: suspended ? 'MEMBER_SUSPENDED' : 'MEMBER_ACTIVATED',
         resourceType: 'user',
         resourceId: req.params.id,
         ...extractRequestInfo(req),
-      });
+      };
       return member;
     }
   );
@@ -262,7 +262,7 @@ async function routes(fastify) {
       }
 
       const after = await repo.updateMemberRole(req.params.id, role);
-      await createAuditLog({
+      req.auditOnResponse = {
         userId: req.user.id,
         action: 'MEMBER_ROLE_CHANGED',
         resourceType: 'user',
@@ -270,7 +270,7 @@ async function routes(fastify) {
         oldValue: { role: before.role },
         newValue: { role: after.role },
         ...extractRequestInfo(req),
-      });
+      };
       return after;
     }
   );
@@ -329,7 +329,7 @@ async function routes(fastify) {
       }
 
       const after = await repo.updateMemberManager(req.params.id, manager_id);
-      await createAuditLog({
+      req.auditOnResponse = {
         userId: req.user.id,
         action: 'MEMBER_MANAGER_CHANGED',
         resourceType: 'user',
@@ -337,7 +337,7 @@ async function routes(fastify) {
         oldValue: { manager_id: member.manager_id },
         newValue: { manager_id },
         ...extractRequestInfo(req),
-      });
+      };
       return after;
     }
   );

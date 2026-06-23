@@ -2,7 +2,6 @@
 const rbac = require('../../middleware/rbac');
 const ownership = require('../../middleware/ownership');
 const repo = require('./repository');
-const { createAuditLog } = require('../../utils/audit');
 const argon2 = require('argon2');
 const { z } = require('zod');
 const authRepo = require('../auth/repository');
@@ -58,12 +57,12 @@ async function routes(fastify) {
     { preHandler: [auth, rbac('ADMIN')] },
     async (req) => {
       await repo.suspendUser(req.params.id);
-      await createAuditLog({
+      req.auditOnResponse = {
         userId: req.user.id,
         action: 'USER_SUSPENDED',
         resourceType: 'user',
         resourceId: req.params.id,
-      });
+      };
       return { message: 'Suspended' };
     }
   );
@@ -72,23 +71,23 @@ async function routes(fastify) {
     { preHandler: [auth, rbac('ADMIN')] },
     async (req) => {
       await repo.activateUser(req.params.id);
-      await createAuditLog({
+      req.auditOnResponse = {
         userId: req.user.id,
         action: 'USER_ACTIVATED',
         resourceType: 'user',
         resourceId: req.params.id,
-      });
+      };
       return { message: 'Activated' };
     }
   );
   fastify.delete('/:id', { preHandler: [auth, rbac('ADMIN')] }, async (req) => {
     await repo.softDeleteUser(req.params.id);
-    await createAuditLog({
+    req.auditOnResponse = {
       userId: req.user.id,
       action: 'USER_DELETED',
       resourceType: 'user',
       resourceId: req.params.id,
-    });
+    };
     return { message: 'Soft-deleted' };
   });
 
@@ -106,12 +105,12 @@ async function routes(fastify) {
       return reply.status(400).send({ error: 'Current password is incorrect' });
     const newHash = await argon2.hash(newPassword);
     await authRepo.updatePassword(req.user.id, newHash);
-    await createAuditLog({
+    req.auditOnResponse = {
       userId: req.user.id,
       action: 'PASSWORD_CHANGED',
       resourceType: 'user',
       resourceId: req.user.id,
-    });
+    };
     return { message: 'Password updated' };
   });
 
