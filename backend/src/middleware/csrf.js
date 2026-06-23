@@ -46,8 +46,6 @@ function parseCookies(header) {
   return out;
 }
 
-const tokens = new Map();
-
 function newSessionId() {
   return crypto.randomBytes(24).toString('hex');
 }

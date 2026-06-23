@@ -8,7 +8,12 @@ const { z } = require('zod');
 const authRepo = require('../auth/repository');
 
 const listUsersQuerySchema = z.object({
+  search: z.string().trim().max(100).optional(),
   role: z.enum(['ADMIN', 'SENIOR_TL', 'TL', 'CAPTAIN', 'INTERN']).optional(),
+  suspended: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -20,15 +25,25 @@ async function routes(fastify) {
     { preHandler: [auth, rbac('ADMIN')] },
     async (req, reply) => {
       const parsed = listUsersQuerySchema.safeParse(req.query);
+
       if (!parsed.success) {
         return reply.status(400).send({
           error: 'Invalid query parameters',
           details: parsed.error.issues,
         });
       }
-      const { role, page, limit } = parsed.data;
+
+      const { search, role, suspended, page, limit } = parsed.data;
       const offset = (page - 1) * limit;
-      return repo.listUsersPaginated({ role, page, limit, offset });
+
+      return repo.listUsersPaginated({
+        search,
+        role,
+        suspended,
+        page,
+        limit,
+        offset,
+      });
     }
   );
 
@@ -67,6 +82,7 @@ async function routes(fastify) {
       return { message: 'Suspended' };
     }
   );
+
   fastify.patch(
     '/:id/activate',
     { preHandler: [auth, rbac('ADMIN')] },
@@ -81,6 +97,7 @@ async function routes(fastify) {
       return { message: 'Activated' };
     }
   );
+
   fastify.delete('/:id', { preHandler: [auth, rbac('ADMIN')] }, async (req) => {
     await repo.softDeleteUser(req.params.id);
     await createAuditLog({
@@ -98,20 +115,29 @@ async function routes(fastify) {
       oldPassword: z.string(),
       newPassword: z.string().min(8),
     });
+
     const { oldPassword, newPassword } = schema.parse(req.body);
     const user = await authRepo.findById(req.user.id);
+
     if (!user) return reply.status(404).send({ error: 'User not found' });
+
     const valid = await authRepo.verifyPassword(user, oldPassword);
-    if (!valid)
+
+    if (!valid) {
       return reply.status(400).send({ error: 'Current password is incorrect' });
+    }
+
     const newHash = await argon2.hash(newPassword);
+
     await authRepo.updatePassword(req.user.id, newHash);
+
     await createAuditLog({
       userId: req.user.id,
       action: 'PASSWORD_CHANGED',
       resourceType: 'user',
       resourceId: req.user.id,
     });
+
     return { message: 'Password updated' };
   });
 
@@ -130,8 +156,11 @@ async function routes(fastify) {
       notes: z.string().optional(),
       avatar_url: z.string().optional(),
     });
+
     const data = schema.parse(req.body);
+
     await authRepo.updateProfile(req.user.id, data);
+
     return { message: 'Profile updated' };
   });
 }

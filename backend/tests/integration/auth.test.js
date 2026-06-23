@@ -196,6 +196,17 @@ describe('Auth Integration Tests', () => {
         payload: {},
       });
       expect(res.statusCode).toBe(200);
+
+      // Verify that refresh token and csrf cookies are cleared
+      const responseCookies = parseSetCookie(res.headers['set-cookie']);
+      expect(responseCookies['refreshToken']).toBeDefined();
+      expect(responseCookies['csrf-sid']).toBeDefined();
+      expect(responseCookies['csrf-token']).toBeDefined();
+
+      // Ensure that their values represent deletion/clearing (either empty or 'deleted')
+      expect(['', 'deleted']).toContain(responseCookies['refreshToken']);
+      expect(['', 'deleted']).toContain(responseCookies['csrf-sid']);
+      expect(['', 'deleted']).toContain(responseCookies['csrf-token']);
     });
   });
 
