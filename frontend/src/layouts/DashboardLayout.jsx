@@ -136,7 +136,7 @@ export default function DashboardLayout() {
         title={collapsed ? n.label : undefined}
         className={`group flex items-center gap-3 rounded-xl text-sm font-medium transition-all
           ${collapsed ? 'justify-center px-0 py-3' : 'px-3 py-2.5'}
-          ${active ? 'bg-white text-indigo-700 shadow-lg shadow-indigo-900/20' : 'text-indigo-100 hover:bg-white/10 hover:translate-x-1'}`}
+          ${active ? 'bg-white text-indigo-700 shadow-lg shadow-indigo-900/20' : 'text-indigo-100 hover:bg-white/15 hover:text-white'}`}
       >
         <Icon className="w-5 h-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
         {!collapsed && <span className="whitespace-nowrap">{n.label}</span>}
