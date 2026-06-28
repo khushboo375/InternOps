@@ -91,6 +91,13 @@ api.interceptors.response.use(
     return res;
   },
   async (err) => {
+    // Globally log the error to the browser console
+    console.error(
+      '[Global API Error]',
+      err.response?.data || err.message,
+      err.config?.url
+    );
+
     const original = err.config || {};
     const status = err.response?.status;
 
