@@ -176,8 +176,14 @@ async function routes(fastify) {
       schema: { tags: ['AI'], description: 'Check AI provider health' },
     },
     async () => {
+      const providers = getProviderHealth().map((provider) => ({
+        name: provider.name,
+        status: provider.available ? 'healthy' : 'unhealthy',
+        lastErrorMessage: provider.lastError?.message || null,
+      }));
+
       return {
-        providers: getProviderHealth(),
+        providers,
       };
     }
   );
