@@ -289,12 +289,10 @@ async function routes(fastify) {
       } = req.body;
 
       if (!recipient_name || !domain || !start_date || !end_date) {
-        return reply
-          .code(400)
-          .send({
-            error:
-              'recipient_name, domain, start_date, and end_date are required',
-          });
+        return reply.code(400).send({
+          error:
+            'recipient_name, domain, start_date, and end_date are required',
+        });
       }
 
       const result = await service.quickGenerate(

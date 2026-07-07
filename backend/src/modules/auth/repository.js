@@ -204,10 +204,12 @@ async function claimRefreshToken(tokenHash) {
     });
     if (!raw) return null;
     // Also revoke in Postgres so token can't be replayed after Redis restart
-    await pool.query(
-      'UPDATE refresh_tokens SET revoked = TRUE WHERE token_hash = $1 AND revoked = FALSE',
-      [tokenHash]
-    ).catch(() => {});
+    await pool
+      .query(
+        'UPDATE refresh_tokens SET revoked = TRUE WHERE token_hash = $1 AND revoked = FALSE',
+        [tokenHash]
+      )
+      .catch(() => {});
     try {
       return JSON.parse(raw).userId;
     } catch {

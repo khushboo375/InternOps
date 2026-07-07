@@ -36,7 +36,8 @@ module.exports = {
     accessSecret: process.env.JWT_SECRET,
     refreshSecret: resolveRefreshSecret(),
     accessExpiry: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
-    refreshExpiry: process.env.JWT_REFRESH_EXPIRES_IN || process.env.JWT_EXPIRES_IN || '7d',
+    refreshExpiry:
+      process.env.JWT_REFRESH_EXPIRES_IN || process.env.JWT_EXPIRES_IN || '7d',
   },
   apiKey: process.env.API_KEY,
   uploadDir: process.env.UPLOAD_DIR || 'uploads',
