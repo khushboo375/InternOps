@@ -74,6 +74,10 @@ async function login(email, password, ip, userAgent) {
     }
   } catch (err) {
     console.error('Redis Brute Force Check Failed:', err);
+
+    throw new UnauthorizedError(
+      'Login temporarily unavailable. Please try again later.'
+    );
   }
 
   const user = await repo.findByEmail(email);
