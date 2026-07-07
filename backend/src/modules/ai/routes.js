@@ -58,7 +58,6 @@ async function routes(fastify) {
       },
     },
     async (req, reply) => {
-
       //Requests larger than 2 MB are rejected by Fastify via `bodyLimit`
 
       const ALLOWED_ROLES = ['user', 'assistant', 'system'];
