@@ -60,7 +60,7 @@ export default function ForgotPassword() {
               e.preventDefault();
 
               if (forgotMut.isPending) return;
-              
+
               forgotMut.mutate(email);
             }}
             className="space-y-4"

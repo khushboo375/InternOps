@@ -92,7 +92,7 @@ export default function Login() {
 
     if (!email.trim() || !password)
       return setError('Email and password required');
-    
+
     setError('');
     loginMut.mutate({ email, password });
   };
