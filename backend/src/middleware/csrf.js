@@ -44,6 +44,10 @@ function tokenFor(sessionId) {
   return sign(`csrf:${sessionId}`);
 }
 
+function logCsrfWarn(request, details, message) {
+  request.log?.warn(details, message);
+}
+
 function readSession(request) {
   const cookies = parseCookies(request.headers.cookie);
   const raw = cookies[SESSION_COOKIE];
@@ -99,10 +103,23 @@ function getOrCreateToken(request, reply) {
   let tokenUserId = null;
   const authHeader = request.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
+    const authToken = authHeader.split(' ')[1];
     try {
-      const decoded = verifyAccessToken(authHeader.split(' ')[1]);
+      const decoded = verifyAccessToken(authToken);
       tokenUserId = decoded.id;
-    } catch (err) {}
+    } catch (err) {
+      logCsrfWarn(
+        request,
+        {
+          err,
+          method: request.method,
+          url: request.url,
+          hasAuthHeader: true,
+          tokenLength: authToken ? authToken.length : 0,
+        },
+        'CSRF bearer token verification failed while generating CSRF token'
+      );
+    }
   }
 
   if (!session) {
@@ -172,10 +189,23 @@ async function csrfCheck(request, reply) {
   } else {
     const authHeader = request.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
+      const authToken = authHeader.split(' ')[1];
       try {
-        const decoded = verifyAccessToken(authHeader.split(' ')[1]);
+        const decoded = verifyAccessToken(authToken);
         tokenUserId = decoded.id;
-      } catch (err) {}
+      } catch (err) {
+        logCsrfWarn(
+          request,
+          {
+            err,
+            method: request.method,
+            url: request.url,
+            hasAuthHeader: true,
+            tokenLength: authToken ? authToken.length : 0,
+          },
+          'CSRF bearer token verification failed during request validation'
+        );
+      }
     }
   }
 
