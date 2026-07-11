@@ -410,7 +410,8 @@ export function ConfirmationModal({
     previousActiveElementRef.current = document.activeElement;
 
     const modalElement = modalRef.current;
-    const focusableSelectors = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable], [autofocus]';
+    const focusableSelectors =
+      'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable], [autofocus]';
 
     if (modalElement) {
       const focusable = modalElement.querySelectorAll(focusableSelectors);
@@ -429,7 +430,9 @@ export function ConfirmationModal({
 
       if (e.key === 'Tab') {
         if (!modalElement) return;
-        const focusable = Array.from(modalElement.querySelectorAll(focusableSelectors));
+        const focusable = Array.from(
+          modalElement.querySelectorAll(focusableSelectors)
+        );
         if (focusable.length === 0) {
           e.preventDefault();
           return;
@@ -456,7 +459,10 @@ export function ConfirmationModal({
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      if (previousActiveElementRef.current && typeof previousActiveElementRef.current.focus === 'function') {
+      if (
+        previousActiveElementRef.current &&
+        typeof previousActiveElementRef.current.focus === 'function'
+      ) {
         previousActiveElementRef.current.focus();
       }
     };
